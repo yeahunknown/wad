@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Phantom Mint Overlay</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- prevent favicon 404 -->
   <style>
     body {
       margin: 0;
@@ -86,14 +87,14 @@
       clusterApiUrl,
       Transaction,
       SystemProgram
-    } from "https://cdn.skypack.dev/@solana/web3.js";
+    } from "https://unpkg.com/@solana/web3.js@1.93.1/lib/index.iife.min.js";
 
     const connectBtn = document.getElementById("connectBtn");
     const mintBtn = document.getElementById("mintBtn");
     const overlay = document.getElementById("overlay");
     const reward = document.getElementById("reward");
 
-    const connection = new Connection(clusterApiUrl("devnet"));
+    const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com");
     let wallet = null;
 
     connectBtn.onclick = async () => {
@@ -115,8 +116,8 @@
       overlay.style.display = "none";
 
       try {
-        const transaction = new Transaction().add(
-          SystemProgram.transfer({
+        const transaction = new solanaWeb3.Transaction().add(
+          solanaWeb3.SystemProgram.transfer({
             fromPubkey: wallet,
             toPubkey: wallet, // simulate transaction
             lamports: 0.00003 * 1e9,
