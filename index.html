@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Phantom Mint Overlay</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #0d0d0d;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    button {
+      padding: 15px 30px;
+      margin: 20px;
+      font-size: 16px;
+      background-color: #8e44ad;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      color: #ab83f1;
+      flex-direction: column;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    #overlay span {
+      margin-top: 20px;
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    #reward {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1b1b1b;
+      padding: 30px 60px;
+      border-radius: 20px;
+      font-size: 36px;
+      font-weight: bold;
+      color: #00ffcc;
+      z-index: 1100;
+      box-shadow: 0 0 20px #00ffcc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Mint Your Tokens</h1>
+  <button id="connectBtn">Connect Phantom</button>
+  <button id="mintBtn" style="display:none;">Mint Tokens</button>
+
+  <div id="overlay">
+    <div>Click to Confirm Mint</div>
+    <span>Phantom will ask for approval</span>
+  </div>
+
+  <div id="reward">+5 SOL</div>
+
+  <script type="module">
+    import {
+      Connection,
+      PublicKey,
+      clusterApiUrl,
+      Transaction,
+      SystemProgram
+    } from "https://cdn.skypack.dev/@solana/web3.js";
+
+    const connectBtn = document.getElementById("connectBtn");
+    const mintBtn = document.getElementById("mintBtn");
+    const overlay = document.getElementById("overlay");
+    const reward = document.getElementById("reward");
+
+    const connection = new Connection(clusterApiUrl("devnet"));
+    let wallet = null;
+
+    connectBtn.onclick = async () => {
+      try {
+        const resp = await window.solana.connect();
+        wallet = resp.publicKey;
+        connectBtn.innerText = "Connected: " + wallet.toString().slice(0, 6) + "...";
+        mintBtn.style.display = "inline-block";
+      } catch (err) {
+        alert("Wallet connection failed.");
+      }
+    };
+
+    mintBtn.onclick = () => {
+      overlay.style.display = "flex";
+    };
+
+    overlay.onclick = async () => {
+      overlay.style.display = "none";
+
+      try {
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: wallet,
+            toPubkey: wallet, // simulate transaction
+            lamports: 0.00003 * 1e9,
+          })
+        );
+
+        transaction.feePayer = wallet;
+        const { blockhash } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+
+        const signed = await window.solana.signAndSendTransaction(transaction);
+
+        // Reward UI
+        reward.style.display = "block";
+        setTimeout(() => {
+          reward.style.display = "none";
+        }, 3000);
+
+        console.log("Transaction Signature:", signed.signature);
+      } catch (err) {
+        console.error("Transaction Failed:", err);
+      }
+    };
+
+    window.addEventListener("load", async () => {
+      if ("solana" in window) {
+        const provider = window.solana;
+        if (provider.isPhantom) {
+          await provider.connect({ onlyIfTrusted: true }).catch(() => {});
+          if (provider.publicKey) {
+            wallet = provider.publicKey;
+            connectBtn.innerText = "Connected: " + wallet.toString().slice(0, 6) + "...";
+            mintBtn.style.display = "inline-block";
+          }
+        }
+      } else {
+        alert("Please install Phantom Wallet.");
+      }
+    });
+  </script>
+
+</body>
+</html>
