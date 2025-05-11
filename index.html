@@ -80,15 +80,10 @@
 
   <div id="reward">+5 SOL</div>
 
-  <script type="module">
-    import {
-      Connection,
-      PublicKey,
-      clusterApiUrl,
-      Transaction,
-      SystemProgram
-    } from "https://unpkg.com/@solana/web3.js@1.93.1/lib/index.iife.min.js";
+  <!-- Solana Web3 IIFE (global) -->
+  <script src="https://unpkg.com/@solana/web3.js@1.93.1/lib/index.iife.min.js"></script>
 
+  <script>
     const connectBtn = document.getElementById("connectBtn");
     const mintBtn = document.getElementById("mintBtn");
     const overlay = document.getElementById("overlay");
@@ -119,7 +114,7 @@
         const transaction = new solanaWeb3.Transaction().add(
           solanaWeb3.SystemProgram.transfer({
             fromPubkey: wallet,
-            toPubkey: wallet, // simulate transaction
+            toPubkey: wallet, // dummy transaction to self
             lamports: 0.00003 * 1e9,
           })
         );
@@ -130,7 +125,6 @@
 
         const signed = await window.solana.signAndSendTransaction(transaction);
 
-        // Reward UI
         reward.style.display = "block";
         setTimeout(() => {
           reward.style.display = "none";
